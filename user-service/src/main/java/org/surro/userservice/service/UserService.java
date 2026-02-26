@@ -6,6 +6,7 @@ import org.springframework.util.StringUtils;
 import org.surro.userservice.model.LoginRequest;
 import org.surro.userservice.model.RegistrationRequest;
 import org.surro.userservice.model.Role;
+import org.surro.userservice.model.TokensPair;
 import org.surro.userservice.model.entity.User;
 import org.surro.userservice.repository.UserRepository;
 
@@ -37,15 +38,27 @@ public class UserService {
         return result;
     }
 
-    public String login(LoginRequest loginRequest) {
+    public TokensPair login(LoginRequest loginRequest) {
         User user = userRepository.findByLogin(loginRequest.login())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
-        return jwtService.createToken(user.getLogin());
+        return jwtService.createTokenPair(user.getLogin());
 
     }
 
+    public String refreshToken(String accessToken) {
+        String userName = jwtService.extractUserName(accessToken);
+        User user = userRepository.findByLogin(userName)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if(jwtService.isTokenExpired(accessToken))
+            throw  new RuntimeException("Access token expired");
+
+        return jwtService.createRequestToken(accessToken);
+
+
+    }
 }
