@@ -1,14 +1,19 @@
 package org.surro.userservice.service;
 
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.stereotype.Service;
 import org.surro.userservice.model.TokensPair;
 
 import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -16,8 +21,9 @@ public class JwtService {
     Map<String, Object> claims = new HashMap<>();
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
-    private static final int REQUEST_TOKEN_LIFETIME = 1000 * 60 * 5;
-    private static final int ACCESS_TOKEN_LIFETIME = 1000 * 60 * 60 * 24 * 7;
+    private final  JWKSet jwkSet;
+    private static final int ACCESS_TOKEN_LIFETIME = 1000 * 60 * 5;
+    private static final int REFRESH_TOKEN_LIFETIME = 1000 * 60 * 60 * 24 * 7;
 
     public JwtService() throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -25,16 +31,23 @@ public class JwtService {
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         publicKey = keyPair.getPublic();
         privateKey = keyPair.getPrivate();
+
+        RSAKey jwk = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+                .privateKey((RSAPrivateKey) keyPair.getPrivate())
+                .keyID(UUID.randomUUID().toString())
+                .build();
+
+        jwkSet = new JWKSet(jwk.toPublicJWK());
     }
 
     public TokensPair createTokenPair(String userName) {
-        String requestToken = createToken(userName, REQUEST_TOKEN_LIFETIME);
         String accessToken = createToken(userName, ACCESS_TOKEN_LIFETIME);
-        return new TokensPair(requestToken, accessToken, ACCESS_TOKEN_LIFETIME);
+        String refreshToken = createToken(userName, REFRESH_TOKEN_LIFETIME);
+        return new TokensPair(accessToken, refreshToken, REFRESH_TOKEN_LIFETIME);
     }
 
-    public String createRequestToken(String accessToken) {
-        return createToken(getUsername(accessToken), REQUEST_TOKEN_LIFETIME);
+    public String createAcessToken(String refreshToken) {
+        return createToken(getUsername(refreshToken), ACCESS_TOKEN_LIFETIME);
     }
 
     private String createToken(String userName, int tokenTime) {
@@ -74,5 +87,9 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public Map<String, Object> getJwkSet() {
+        return jwkSet.toJSONObject();
     }
 }

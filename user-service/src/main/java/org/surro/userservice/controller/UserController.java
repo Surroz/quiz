@@ -8,16 +8,21 @@ import org.springframework.web.bind.annotation.*;
 import org.surro.userservice.model.LoginRequest;
 import org.surro.userservice.model.RegistrationRequest;
 import org.surro.userservice.model.TokensPair;
+import org.surro.userservice.service.JwtService;
 import org.surro.userservice.service.UserService;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
     private final UserService userService;
+    private final JwtService jwtService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtService jwtService) {
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -32,7 +37,7 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
         TokensPair tokensPair = userService.login(loginRequest);
-        ResponseCookie cookie = ResponseCookie.from("access_token", tokensPair.accessToken())
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", tokensPair.accessToken())
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
@@ -46,7 +51,12 @@ public class UserController {
    }
 
     @GetMapping("/refresh")
-    public ResponseEntity<String> refreshToken(@CookieValue(name = "access_token") String accessToken) {
-        return ResponseEntity.ok(userService.refreshToken(accessToken));
+    public ResponseEntity<String> refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
+        return ResponseEntity.ok(userService.generateAccessToken(refreshToken));
+    }
+
+    @GetMapping("/.well-known/jwks.json")
+    public Map<String, Object> getKeys() {
+        return jwtService.getJwkSet();
     }
 }

@@ -49,15 +49,15 @@ public class UserService {
 
     }
 
-    public String refreshToken(String accessToken) {
-        String userName = jwtService.extractUserName(accessToken);
+    public String generateAccessToken(String refreshToken) {
+        String userName = jwtService.extractUserName(refreshToken);
         User user = userRepository.findByLogin(userName)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if(jwtService.isTokenExpired(accessToken))
-            throw  new RuntimeException("Access token expired");
+        if(jwtService.isTokenExpired(refreshToken))
+            throw  new RuntimeException("Refresh token expired");
 
-        return jwtService.createRequestToken(accessToken);
+        return jwtService.createAcessToken(refreshToken);
 
 
     }
