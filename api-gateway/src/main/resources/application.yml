@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:9090/realms/quiz-app
+        registration:
+          keycloak:
+            client-id: oauth-client
+            client-secret: ySmmh0L1USspiZbjvbQ5We0YzUGdCK2S
+#      resourceserver:
+#        jwt:
+#          jwk-set-uri: http://localhost:8070/user/.well-known/jwks.json
+#          issuer-uri: http://localhost:8070
+server:
+  port: 8765
