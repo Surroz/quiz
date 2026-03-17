@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+  app:
+    build: .
+    environment:
+      POSTGRES_USER: surro
+      POSTGRES_PASSWORD: secret
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/question-service-db
+    ports:
+      - "8080:8080"
+    networks:
+      - s-network
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: surro
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: question-service-db
+    ports:
+      - "5433:5432"
+    networks:
+      - s-network
+    volumes:
+      - postgres-s-data:/var/lib/postgresql
+
+networks:
+  s-network:
+    driver: bridge
+volumes:
+  postgres-s-data:
