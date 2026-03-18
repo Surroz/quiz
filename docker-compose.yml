@@ -1,0 +1,42 @@
+
+services:
+  eureka-server:
+    build: ./service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - quiz-network
+
+  question-service:
+    build: ./question-service
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: true
+      POSTGRES_USER: surro
+      POSTGRES_PASSWORD: secret
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/question-service-db
+    ports:
+      - "8080:8080"
+    networks:
+      - quiz-network
+    depends_on:
+      - postgres
+      - eureka-server
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: surro
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: question-service-db
+    ports:
+      - "5433:5432"
+    networks:
+      - quiz-network
+    volumes:
+      - postgres-s-data:/var/lib/postgresql
+
+networks:
+  quiz-network:
+    driver: bridge
+volumes:
+  postgres-s-data:
