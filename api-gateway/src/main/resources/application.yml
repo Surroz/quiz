@@ -14,14 +14,10 @@ spring:
       client:
         provider:
           keycloak:
-            issuer-uri: http://localhost:9090/realms/quiz-app
+            issuer-uri: ${KEYCLOAK_PROVIDER_URI:http://localhost:9090/realms/quiz-app}
         registration:
           keycloak:
-            client-id: oauth-client
-            client-secret: ySmmh0L1USspiZbjvbQ5We0YzUGdCK2S
-#      resourceserver:
-#        jwt:
-#          jwk-set-uri: http://localhost:8070/user/.well-known/jwks.json
-#          issuer-uri: http://localhost:8070
+            client-id: ${KEYCLOAK_CLIENT_ID:oauth-client}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:secret}
 server:
   port: 8765
