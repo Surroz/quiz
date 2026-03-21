@@ -62,6 +62,31 @@ services:
       - quiz-network
     volumes:
       - postgres-quiz-data:/var/lib/postgresql
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: true
+      KEYCLOAK_PROVIDER_URI: http://keycloak:8080/realms/quiz-app
+      KEYCLOAK_CLIENT_ID: oauth-client
+      KEYCLOAK_CLIENT_SECRET: secret
+    ports:
+      - "8765:8080"
+    networks:
+      - quiz-network
+    depends_on:
+      - eureka-server
+      - keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.4
+    ports:
+      - "9090:8080"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    command: start-dev
+    networks:
+      - quiz-network
 
 networks:
   quiz-network:
